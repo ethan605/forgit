@@ -200,6 +200,26 @@ forgit::fixup() {
 
 }
 
+# git switch selector
+forgit::switch() {
+    forgit::inside_work_tree || return 1
+    [[ $# -ne 0 ]] && { git switch "$@"; return $?; }
+    local cmd preview opts branch
+    cmd="git branch --color=always --verbose --all | sort -k1.1,1.1 -r"
+    preview="git log {1} --graph --pretty=format:'$forgit_log_format' --color=always --abbrev-commit --date=relative"
+    opts="
+        $FORGIT_FZF_DEFAULT_OPTS
+        +s +m --tiebreak=index --header-lines=1
+        $FORGIT_SWITCH_FZF_OPTS
+        "
+    branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
+    [[ -z "$branch" ]] && return 1
+    # track the remote branch if possible
+    if ! git switch --track "$branch" 2>/dev/null; then
+        git switch "$branch"
+    fi
+}
+
 # git checkout-file selector
 forgit::checkout::file() {
     forgit::inside_work_tree || return 1
@@ -213,26 +233,6 @@ forgit::checkout::file() {
     "
     files="$(git ls-files --modified "$(git rev-parse --show-toplevel)"| FZF_DEFAULT_OPTS="$opts" fzf --preview="$cmd")"
     [[ -n "$files" ]] && echo "$files" | tr '\n' '\0' | xargs -0 -I% git checkout %
-}
-
-# git checkout-branch selector
-forgit::checkout::branch() {
-    forgit::inside_work_tree || return 1
-    [[ $# -ne 0 ]] && { git checkout -b "$@"; return $?; }
-    local cmd preview opts branch
-    cmd="git branch --color=always --verbose --all | sort -k1.1,1.1 -r"
-    preview="git log {1} --graph --pretty=format:'$forgit_log_format' --color=always --abbrev-commit --date=relative"
-    opts="
-        $FORGIT_FZF_DEFAULT_OPTS
-        +s +m --tiebreak=index --header-lines=1
-        $FORGIT_CHECKOUT_BRANCH_FZF_OPTS
-        "
-    branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
-    [[ -z "$branch" ]] && return 1
-    # track the remote branch if possible
-    if ! git checkout --track "$branch" 2>/dev/null; then
-        git checkout "$branch"
-    fi
 }
 
 # git checkout-commit selector
@@ -324,8 +324,8 @@ if [[ -z "$FORGIT_NO_ALIASES" ]]; then
     alias "${forgit_log:-glo}"='forgit::log'
     alias "${forgit_diff:-gd}"='forgit::diff'
     alias "${forgit_ignore:-gi}"='forgit::ignore'
+    alias "${forgit_switch:-gsw}"='forgit::switch'
     alias "${forgit_checkout_file:-gcf}"='forgit::checkout::file'
-    alias "${forgit_checkout_branch:-gcb}"='forgit::checkout::branch'
     alias "${forgit_checkout_commit:-gco}"='forgit::checkout::commit'
     alias "${forgit_clean:-gclean}"='forgit::clean'
     alias "${forgit_stash_show:-gss}"='forgit::stash::show'
