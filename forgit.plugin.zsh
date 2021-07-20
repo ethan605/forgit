@@ -197,7 +197,38 @@ forgit::fixup() {
         # GIT_SEQUENCE_EDITOR=: is needed to skip the editor
         GIT_SEQUENCE_EDITOR=: git rebase --autostash -i --autosquash "$prev_commit"
     fi
+}
 
+# git restore viewer
+forgit::restore() {
+    forgit::inside_work_tree || return 1
+    # Add files if passed as arguments
+    [[ $# -ne 0 ]] && git restore "$@" && git status -su && return
+
+    local changed files opts preview extract
+    changed=$(git config --get-color color.status.changed red)
+    # NOTE: paths listed by 'git status -su' mixed with quoted and unquoted style
+    # remove indicators | remove original path for rename case | remove surrounding quotes
+    extract="
+        sed 's/^.*]  //' |
+        sed 's/.* -> //' |
+        sed -e 's/^\\\"//' -e 's/\\\"\$//'"
+    preview="
+        file=\$(echo {} | $extract)
+        git diff --color=always -- \$file | $forgit_diff_pager
+    "
+    opts="
+        $FORGIT_FZF_DEFAULT_OPTS
+        -0 -m --nth 2..,..
+        $FORGIT_ADD_FZF_OPTS
+    "
+    files=$(git -c color.status=always -c status.relativePaths=true status -su |
+        grep -F -e "$changed" |
+        sed -E 's/^(..[^[:space:]]*)[[:space:]]+(.*)$/[\1]  \2/' |
+        FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" |
+        sh -c "$extract")
+    [[ -n "$files" ]] && echo "$files" | tr '\n' '\0' | xargs -0 -I% git restore % && git status -su && return
+    echo 'Nothing to add.'
 }
 
 # git delete branch selector
@@ -363,6 +394,7 @@ if [[ -z "$FORGIT_NO_ALIASES" ]]; then
     alias "${forgit_log:-glo}"='forgit::log'
     alias "${forgit_diff:-gd}"='forgit::diff'
     alias "${forgit_ignore:-gi}"='forgit::ignore'
+    alias "${forgit_restore:-grs}"='forgit::restore'
     alias "${forgit_delete_branch:-gbD}"='forgit::delete::branch'
     alias "${forgit_merge:-gm}"='forgit::merge'
     alias "${forgit_switch:-gsw}"='forgit::switch'
