@@ -238,7 +238,7 @@ forgit::restore() {
     opts="
         $FORGIT_FZF_DEFAULT_OPTS
         -0 -m --nth 2..,..
-        $FORGIT_ADD_FZF_OPTS
+        $FORGIT_RESTORE_FZF_OPTS
     "
     files=$(git -c color.status=always -c status.relativePaths=true status -su |
         grep -F -e "$changed" |
@@ -259,7 +259,7 @@ forgit::delete::branch() {
     opts="
         $FORGIT_FZF_DEFAULT_OPTS
         +s -m --tiebreak=index --header-lines=1
-        $FORGIT_SWITCH_FZF_OPTS
+        $FORGIT_BRANCH_FZF_OPTS
     "
     branches="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $0}')"
     [[ -z "$branches" ]] && return 0
@@ -276,7 +276,7 @@ forgit::merge() {
     opts="
         $FORGIT_FZF_DEFAULT_OPTS
         +s +m --tiebreak=index --header-lines=1
-        $FORGIT_SWITCH_FZF_OPTS
+        $FORGIT_BRANCH_FZF_OPTS
         "
     branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
     [[ -z "$branch" ]] && return 1
@@ -293,7 +293,7 @@ forgit::switch() {
     opts="
         $FORGIT_FZF_DEFAULT_OPTS
         +s +m --tiebreak=index --header-lines=1
-        $FORGIT_SWITCH_FZF_OPTS
+        $FORGIT_BRANCH_FZF_OPTS
         "
     branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
     [[ -z "$branch" ]] && return 1
