@@ -248,8 +248,13 @@ forgit::switch() {
         "
     branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
     [[ -z "$branch" ]] && return 1
-    # track the remote branch if possible
-    if ! git switch --track "$branch" 2>/dev/null; then
+
+    # Only track for branches started with "remotes/"
+    if [[ "$branch" == remotes/* ]]; then
+        if ! git switch --track "$branch" 2>/dev/null; then
+            git switch "$branch"
+        fi
+    else
         git switch "$branch"
     fi
 }
