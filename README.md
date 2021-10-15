@@ -33,22 +33,22 @@ It's **lightweight** and **easy to use**.
 
 ``` zsh
 # for zplug
-zplug 'wfxr/forgit'
+zplug 'ethan605/forgit'
 
 # for zgen
-zgen load 'wfxr/forgit'
+zgen load 'ethan605/forgit'
 
 # for antigen
-antigen bundle 'wfxr/forgit'
+antigen bundle 'ethan605/forgit'
 
 # for fisher
-fisher install wfxr/forgit
+fisher install ethan605/forgit
 
 # for omf
-omf install https://github.com/wfxr/forgit
+omf install https://github.com/ethan605/forgit
 
 # for zinit
-zinit load wfxr/forgit
+zinit load ethan605/forgit
 
 # manually
 # Clone the repository and source it in your shell's rc file.
@@ -62,6 +62,12 @@ source <(curl -sSL git.io/forgit)
 # for fish
 source (curl -sSL git.io/forgit-fish | psub)
 ```
+
+#### zim
+
+Add `zmodule ethan605/forgit` to `~/.zimrc`
+
+and run `zimfw install`
 
 ### 📝 Features
 
@@ -79,13 +85,19 @@ source (curl -sSL git.io/forgit-fish | psub)
 
 ![screenshot](https://raw.githubusercontent.com/wfxr/i/master/forgit-gi.png)
 
-- **Interactive `git diff` viewer** (`gd`)
+- **Interactive `git diff <file>` viewer** (`gd`)
 
 - **Interactive `git reset HEAD <file>` selector** (`grh`)
 
-- **Interactive `git checkout <file>` selector** (`gcf`)
+- **Interactive `git restore <file>` selector** (`grs`)
 
-- **Interactive `git checkout <branch>` selector** (`gcb`)
+- **Interactive `git branch -D <branch>` selector** (`gbD`)
+
+- **Interactive `git merge <branch>` selector** (`gm`)
+
+- **Interactive `git switch <branch>` selector** (`gsw`)
+
+- **Interactive `git checkout <file>` selector** (`gcf`)
 
 - **Interactive `git checkout <commit>` selector** (`gco`)
 
@@ -132,8 +144,11 @@ forgit_diff=gd
 forgit_add=ga
 forgit_reset_head=grh
 forgit_ignore=gi
+forgit_restore=grs
+forgit_delete_branch=gbD
+forgit_merge=gm
+forgit_switch=gsw
 forgit_checkout_file=gcf
-forgit_checkout_branch=gcb
 forgit_checkout_commit=gco
 forgit_clean=gclean
 forgit_stash_show=gss
@@ -180,8 +195,11 @@ Customizing fzf options for each command individually is also supported:
 | `gi`     | `FORGIT_IGNORE_FZF_OPTS`          |
 | `gd`     | `FORGIT_DIFF_FZF_OPTS`            |
 | `grh`    | `FORGIT_RESET_HEAD_FZF_OPTS`      |
+| `grs`    | `FORGIT_RESTORE_FZF_OPTS`         |
+| `gbD`    | `FORGIT_BRANCH_FZF_OPTS`          |
+| `gm`     | `FORGIT_BRANCH_FZF_OPTS`          |
+| `gsw`    | `FORGIT_BRANCH_FZF_OPTS`          |
 | `gcf`    | `FORGIT_CHECKOUT_FILE_FZF_OPTS`   |
-| `gcb`    | `FORGIT_CHECKOUT_BRANCH_FZF_OPTS` |
 | `gco`    | `FORGIT_CHECKOUT_COMMIT_FZF_OPTS` |
 | `gss`    | `FORGIT_STASH_FZF_OPTS`           |
 | `gclean` | `FORGIT_CLEAN_FZF_OPTS`           |
