@@ -323,6 +323,34 @@ forgit::checkout::file() {
     [[ -n "$files" ]] && echo "$files" | tr '\n' '\0' | xargs -0 -I% git checkout %
 }
 
+# git checkout-branch selector
+forgit::checkout::branch() {
+    forgit::inside_work_tree || return 1
+    [[ $# -ne 0 ]] && { git checkout -b "$@"; return $?; }
+    local cmd preview opts branch
+    cmd="git branch --color=always --verbose --all | sort -k1.1,1.1 -r"
+    preview="git log {1} --graph --pretty=format:'$forgit_log_format' --color=always --abbrev-commit --date=relative"
+    opts="
+        $FORGIT_FZF_DEFAULT_OPTS
+        +s +m --tiebreak=index --header-lines=1
+        $FORGIT_CHECKOUT_BRANCH_FZF_OPTS
+        "
+    branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
+    [[ -z "$branch" ]] && return 1
+
+    # track the remote branch if possible
+    if [[ "$branch" == "remotes/origin/"* ]]; then
+        if git branch | grep -qw "${branch#remotes/origin/}"; then
+            # hack to force creating a new branch which tracks the remote if a local branch already exists
+            git checkout -b "track/${branch#remotes/origin/}" --track "$branch"
+        elif ! git checkout --track "$branch" 2>/dev/null; then
+            git checkout "$branch"
+        fi
+    else
+        git checkout "$branch"
+    fi
+}
+
 # git checkout-commit selector
 forgit::checkout::commit() {
     forgit::inside_work_tree || return 1
