@@ -288,31 +288,6 @@ forgit::switch() {
     forgit::inside_work_tree || return 1
     [[ $# -ne 0 ]] && { git switch "$@"; return $?; }
     local cmd preview opts branch
-    cmd="git branch --color=always --all | sort -k1.1,1.1 -r"
-    preview="git log {1} --graph --pretty=format:'$forgit_log_format' --color=always --abbrev-commit --date=relative"
-    opts="
-        $FORGIT_FZF_DEFAULT_OPTS
-        +s +m --tiebreak=index --header-lines=1
-        $FORGIT_BRANCH_FZF_OPTS
-        "
-    branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
-    [[ -z "$branch" ]] && return 1
-
-    # Only track for branches started with "remotes/"
-    if [[ "$branch" == remotes/* ]]; then
-        if ! git switch --track "$branch" 2>/dev/null; then
-            git switch "$branch"
-        fi
-    else
-        git switch "$branch"
-    fi
-}
-
-# git switch selector
-forgit::switch() {
-    forgit::inside_work_tree || return 1
-    [[ $# -ne 0 ]] && { git switch "$@"; return $?; }
-    local cmd preview opts branch
     cmd="git branch --color=always --verbose --all | sort -k1.1,1.1 -r"
     preview="git log {1} --graph --pretty=format:'$forgit_log_format' --color=always --abbrev-commit --date=relative"
     opts="
@@ -322,8 +297,13 @@ forgit::switch() {
         "
     branch="$(eval "$cmd" | FZF_DEFAULT_OPTS="$opts" fzf --preview="$preview" | awk '{print $1}')"
     [[ -z "$branch" ]] && return 1
-    # track the remote branch if possible
-    if ! git switch --track "$branch" 2>/dev/null; then
+
+    # Only track for branches started with "remotes/"
+    if [[ "$branch" == remotes/* ]]; then
+        if ! git switch --track "$branch" 2>/dev/null; then
+            git switch "${branch#remotes/origin/}"
+        fi
+    else
         git switch "$branch"
     fi
 }
